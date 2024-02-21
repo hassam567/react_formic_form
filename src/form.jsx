@@ -12,15 +12,16 @@ import CustomCheckbox from './components/CheckBox';
 const StyledBox = styled(Box)({
   border: '1px solid transparent', // Set border color to transparent
   borderColor: 'currentColor', // Use currentColor to inherit the color of the text
-  width: 500,
+  width: 'fit-content', // Set width to fit the content
   display: 'flex',
   flexDirection: "column",
   alignItems: "center",
   margin: "auto",
   marginTop: "30px",
   marginBottom: "30px",
-  height:870,
-
+  height:"auto",
+  paddingBottom:"10px",
+ 
   '@media (max-width: 509px)': {
     margin: '20px auto',
     height:1400,
@@ -86,23 +87,31 @@ const CloseButton = styled(IconButton)({
 
 function DynamicBox() {
   const [showForm, setShowForm] = useState(true);
+  const [textareaWidth, setTextareaWidth] = useState(500); // Initial width for textarea
   const toggleForm = () => {
     setShowForm(prevShowForm => !prevShowForm);
   };
 
-  const handleFormSubmit = (values, { resetForm }) => {
+  const handleFormSubmit = async (values, { resetForm }) => {
     const isEmpty = Object.values(values).some(value => !value);
-    
+  
     if (isEmpty) {
       alert("Please fill in all fields before saving.");
     } else {
-      resetForm();
-      
-      console.log(values);
-      
+      try {
+        await ValidationSchema.validate(values, { abortEarly: false });
+        // If validation succeeds, you can proceed with form submission
+        console.log("Form data:", values);
+        // Reset form after successful submission if needed
+        resetForm();
+        // Here you can submit the form data to your backend or perform any other actions
+      } catch (errors) {
+        // If validation fails, display validation errors
+        console.error("Validation errors:", errors);
+      }
     }
-    
   };
+  
   
   
 
@@ -131,11 +140,13 @@ function DynamicBox() {
     validationSchema: ValidationSchema,
     onSubmit: (values, actions) => handleFormSubmit(values, actions)
   });
-
+  const handleTextareaWidthChange = (newWidth) => {
+    setTextareaWidth(newWidth); // Update textarea width
+  };
   return (
     <ThemeProvider theme={theme}>
       {showForm && (
-        <StyledBox >
+        <StyledBox width={textareaWidth} >
           <SecondStyledBox>
             <Typography align="center" color={'white'}  textTransform={"uppercase"} marginLeft={"20px"}>
               Appointment for 2023 Heartland Prowler (#523330A)
@@ -242,6 +253,7 @@ function DynamicBox() {
                 onChange={handleChange}
                 onBlur={handleBlur}
                 minRows={2}
+                onWidthChange={handleTextareaWidthChange} // 
               />
               {errors.description && touched.description ? (
                 <Typography color="error">{errors.description}</Typography>
@@ -255,6 +267,8 @@ function DynamicBox() {
                 onChange={event => handleChange('comment')(event.target.value)}
                 onBlur={handleBlur}
                 minRows={5}
+                onWidthChange={handleTextareaWidthChange} // 
+                
               />
               {errors.comment && touched.comment ? (
                 <Typography color="error">{errors.comment}</Typography>
